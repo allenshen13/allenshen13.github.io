@@ -1,13 +1,56 @@
-// Smooth scroll reveal animations
-document.addEventListener('DOMContentLoaded', () => {
-    // Add reveal class to sections
+// Typing effect phrases
+const phrases = [
+    "that actually work ✨",
+    "and sometimes break things 🔧", 
+    "with too much coffee ☕",
+    "late at night 🌙",
+    "that scale 📈",
+];
+
+let phraseIndex = 0;
+let charIndex = 0;
+let isDeleting = false;
+let typingSpeed = 100;
+
+function typeWriter() {
+    const typedText = document.querySelector('.typed-text');
+    if (!typedText) return;
+
+    const currentPhrase = phrases[phraseIndex];
+    
+    if (isDeleting) {
+        typedText.textContent = currentPhrase.substring(0, charIndex - 1);
+        charIndex--;
+        typingSpeed = 50;
+    } else {
+        typedText.textContent = currentPhrase.substring(0, charIndex + 1);
+        charIndex++;
+        typingSpeed = 100;
+    }
+
+    if (!isDeleting && charIndex === currentPhrase.length) {
+        typingSpeed = 2000; // Pause at end
+        isDeleting = true;
+    } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        typingSpeed = 500; // Pause before next phrase
+    }
+
+    setTimeout(typeWriter, typingSpeed);
+}
+
+// Scroll reveal animations
+function initScrollReveal() {
     const sections = document.querySelectorAll('.section');
+    
     sections.forEach(section => {
-        const children = section.querySelectorAll('.section-title, .section-subtitle, .project-card, .experience-item, .skill-category, .resume-card, .contact-card');
-        children.forEach(child => child.classList.add('reveal'));
+        const elements = section.querySelectorAll(
+            '.section-title, .section-subtitle, .about-content, .project-card, .fun-card, .contact-card, .skill-pill'
+        );
+        elements.forEach(el => el.classList.add('reveal'));
     });
 
-    // Intersection Observer for scroll animations
     const observerOptions = {
         root: null,
         rootMargin: '0px',
@@ -15,38 +58,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry, index) => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
+                // Add stagger delay
+                setTimeout(() => {
+                    entry.target.classList.add('visible');
+                }, index * 50);
             }
         });
     }, observerOptions);
 
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}
 
-    // Stagger animation for grid items
-    const staggerElements = document.querySelectorAll('.project-card, .skill-category, .contact-card');
-    staggerElements.forEach((el, index) => {
-        el.style.transitionDelay = `${index * 0.1}s`;
-    });
-
-    // Navbar background on scroll
-    const nav = document.querySelector('.nav');
-    let lastScroll = 0;
-
-    window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-        
-        if (currentScroll > 50) {
-            nav.style.background = 'rgba(10, 10, 11, 0.95)';
-        } else {
-            nav.style.background = 'rgba(10, 10, 11, 0.8)';
-        }
-
-        lastScroll = currentScroll;
-    });
-
-    // Smooth scroll for navigation links
+// Smooth scroll for nav links
+function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             e.preventDefault();
@@ -59,86 +85,124 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+}
 
-    // Add hover effect to project cards - tilt effect
-    const projectCards = document.querySelectorAll('.project-card');
-    projectCards.forEach(card => {
-        card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            
-            const rotateX = (y - centerY) / 20;
-            const rotateY = (centerX - x) / 20;
-            
-            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-2px)`;
-        });
+// Navbar scroll effect
+function initNavScroll() {
+    const nav = document.querySelector('.nav');
+    
+    window.addEventListener('scroll', () => {
+        if (window.pageYOffset > 50) {
+            nav.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.08)';
+        } else {
+            nav.style.boxShadow = 'none';
+        }
+    });
+}
 
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
+// Fun card hover sounds (optional - commented out for accessibility)
+function initCardInteractions() {
+    const funCards = document.querySelectorAll('.fun-card');
+    
+    funCards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            // Add a subtle haptic-like effect
+            card.style.transition = 'all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
         });
     });
+}
 
-    // Typing effect for code block (optional enhancement)
-    const codeContent = document.querySelector('.code-content code');
-    if (codeContent) {
-        const originalHTML = codeContent.innerHTML;
-        const text = codeContent.textContent;
+// Skill pills random color on hover
+function initSkillPills() {
+    const colors = ['#6c5ce7', '#fd79a8', '#00b894', '#fdcb6e', '#74b9ff'];
+    const pills = document.querySelectorAll('.skill-pill');
+    
+    pills.forEach(pill => {
+        pill.addEventListener('mouseenter', () => {
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            pill.style.background = randomColor;
+            pill.style.borderColor = randomColor;
+        });
         
-        // Only run typing effect on first load
-        if (!sessionStorage.getItem('codeTyped')) {
-            codeContent.innerHTML = '';
-            let i = 0;
-            
-            function typeWriter() {
-                if (i < originalHTML.length) {
-                    // Handle HTML tags
-                    if (originalHTML[i] === '<') {
-                        const closingIndex = originalHTML.indexOf('>', i);
-                        codeContent.innerHTML += originalHTML.substring(i, closingIndex + 1);
-                        i = closingIndex + 1;
-                    } else {
-                        codeContent.innerHTML += originalHTML[i];
-                        i++;
-                    }
-                    setTimeout(typeWriter, 15);
-                } else {
-                    sessionStorage.setItem('codeTyped', 'true');
-                }
-            }
-            
-            setTimeout(typeWriter, 800);
-        }
-    }
+        pill.addEventListener('mouseleave', () => {
+            pill.style.background = '';
+            pill.style.borderColor = '';
+        });
+    });
+}
 
-    // Active nav link highlighting
+// Active nav link highlighting
+function initActiveNav() {
     const navLinks = document.querySelectorAll('.nav-links a');
-    const sectionElements = document.querySelectorAll('section[id]');
+    const sections = document.querySelectorAll('section[id]');
 
     window.addEventListener('scroll', () => {
         let current = '';
         
-        sectionElements.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionHeight = section.clientHeight;
-            
-            if (window.pageYOffset >= sectionTop - 200) {
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop - 150;
+            if (window.pageYOffset >= sectionTop) {
                 current = section.getAttribute('id');
             }
         });
 
         navLinks.forEach(link => {
-            link.style.color = '';
+            link.classList.remove('active');
             if (link.getAttribute('href') === `#${current}`) {
-                link.style.color = 'var(--text-primary)';
+                link.classList.add('active');
             }
         });
     });
+}
 
-    // Console Easter egg
-    console.log('%c👋 Hey there, fellow developer!', 'font-size: 20px; font-weight: bold;');
-    console.log('%cThanks for checking out my portfolio. Feel free to reach out!', 'font-size: 14px;');
+// Easter egg - Konami code
+const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+let konamiIndex = 0;
+
+function initKonamiCode() {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === konamiCode[konamiIndex]) {
+            konamiIndex++;
+            if (konamiIndex === konamiCode.length) {
+                activateEasterEgg();
+                konamiIndex = 0;
+            }
+        } else {
+            konamiIndex = 0;
+        }
+    });
+}
+
+function activateEasterEgg() {
+    document.body.style.transition = 'all 0.5s ease';
+    document.body.style.filter = 'hue-rotate(180deg)';
+    
+    setTimeout(() => {
+        document.body.style.filter = '';
+    }, 3000);
+    
+    console.log('🎮 You found the easter egg! Nice one.');
+}
+
+// Console message
+function logConsoleMessage() {
+    console.log('%c👋 Hey there!', 'font-size: 24px; font-weight: bold;');
+    console.log('%cThanks for checking out my site!', 'font-size: 14px; color: #6c5ce7;');
+    console.log('%cFeel free to reach out if you want to chat 💬', 'font-size: 14px; color: #666;');
+    console.log('%c🎮 Psst... try the Konami code', 'font-size: 12px; color: #999; font-style: italic;');
+}
+
+// Initialize everything
+document.addEventListener('DOMContentLoaded', () => {
+    // Start typing effect after a short delay
+    setTimeout(typeWriter, 1000);
+    
+    initScrollReveal();
+    initSmoothScroll();
+    initNavScroll();
+    initCardInteractions();
+    initSkillPills();
+    initActiveNav();
+    initKonamiCode();
+    logConsoleMessage();
 });
