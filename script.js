@@ -1,8 +1,7 @@
 // Typing effect phrases
 const phrases = [
-    "that actually work ✨",
-    "and sometimes break things 🔧", 
-    "with too much coffee ☕",
+    "that are fun",
+    "solve random problems", 
     "late at night 🌙",
     "that scale 📈",
 ];
